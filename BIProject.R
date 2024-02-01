@@ -1,0 +1,281 @@
+#Moses Mbugua
+
+
+if (!is.element("languageserver", installed.packages()[, 1])) {
+  install.packages("languageserver", dependencies = TRUE)
+}
+require("languageserver")
+
+install.packages("moments")
+install.packages("plotly")
+
+
+
+
+
+#Milestone 1----
+###Issue 1: DESCRIPTIVE STATISTICS ----
+
+#Code 
+library(readr)
+# Load the mice package
+library(mice)
+
+library(readxl)
+avacado_price_prediction_dataset <- read_excel("data/avacado_price_prediction_dataset.xlsx")
+View(avacado_price_prediction_dataset)
+
+
+#Dimensions
+dim(avacado_price_prediction_dataset)
+
+# Data Types 
+sapply(avacado_price_prediction_dataset, class)
+
+# Measure of Frequency
+avocado_price_prediction_frequencies <- table(avacado_price_prediction_dataset$type)
+
+# Measure of Central Tendency
+# median
+median_value <- median(avacado_price_prediction_dataset$AveragePrice)
+print(median_value)
+
+# mode
+# Function to calculate the mode
+calculate_mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Calculate the mode for a specific column (e.g., "AveragePrice")
+mode_value <- calculate_mode(avacado_price_prediction_dataset$AveragePrice)
+print(mode_value)
+
+# Measure of Distribution
+summary(avacado_price_prediction_dataset)
+
+#range
+range_value <- range(avacado_price_prediction_dataset$AveragePrice)
+print(range_value)
+
+#variance
+variance_value <- var(avacado_price_prediction_dataset$AveragePrice)
+print(variance_value)
+
+#Standard Deviation
+std_deviation_value <- sd(avacado_price_prediction_dataset$AveragePrice)
+print(std_deviation_value)
+
+#interquartile range
+Q <- quantile(avacado_price_prediction_dataset$AveragePrice, c(0.25, 0.75), na.rm = TRUE)
+iqr_value <- IQR(avacado_price_prediction_dataset$AveragePrice, na.rm = TRUE)
+print(iqr_value)
+
+
+
+#Measure of kurtosis of each variable
+if (!is.element("e1071", installed.packages()[, 1])) {
+  install.packages("e1071", dependencies = TRUE)
+}
+require("e1071")
+
+sapply(avacado_price_prediction_dataset[, 6:9],  kurtosis, type = 2)
+
+#Measure of skewness of each variable
+sapply(avacado_price_prediction_dataset[, 6:9],  skewness, type = 2)
+
+names(avacado_price_prediction_dataset)
+
+#measure of relationship
+#correlation between "AveragePrice" and "Total.Volume"
+correlation_value <- cor(avacado_price_prediction_dataset$AveragePrice, avacado_price_prediction_dataset$`Total Volume`, use = "complete.obs")
+print(correlation_value)
+
+
+
+
+###Issue 2: STATISTICAL TEST (ANOVA)
+# ANOVA on "AveragePrice" by "type"
+anova_result <- aov(AveragePrice ~ type, data = avacado_price_prediction_dataset)
+print(anova_result)
+
+
+
+###Issue 3: Basic Visualization
+#UNVARIATE AND MULTIVARIATE PLOTS
+# Load required libraries
+library(ggplot2)
+if (!is.element("caret", installed.packages()[, 1])) {
+  install.packages("caret", dependencies = TRUE)
+}
+# Univariate plot (Histogram for "AveragePrice")
+ggplot(avacado_price_prediction_dataset, aes(x = AveragePrice)) +
+  geom_histogram(binwidth = 0.1, fill = "blue", color = "black", alpha = 0.7) +
+  labs(title = "Histogram of AveragePrice", x = "Average Price", y = "Frequency")
+
+# Multivariate plot (Scatter plot for "Total.Volume" vs. "Total.Bags" with color representing "type")
+ggplot(avacado_price_prediction_dataset, aes(x = `Total Volume`, y = `Total Bags`, color = type)) +
+  geom_point(alpha = 0.7) +
+  labs(title = "Scatter Plot of Total.Volume vs. Total.Bags", x = "Total Volume", y = "Total Bags")
+
+#MILESTONE 2----
+#MISSING VALUES
+# Check for missing values using summary
+summary(avacado_price_prediction_dataset)
+
+# Check for missing values using colSums
+col_missing <- colSums(is.na(avacado_price_prediction_dataset))
+print(col_missing)
+
+
+#DATA IMPUTATION DATA TRANSFORMATION no need as i have zero missing daat
+
+# Load required libraries
+## dplyr ----
+if (require("dplyr")) {
+  require("dplyr")
+} else {
+  install.packages("dplyr", dependencies = TRUE,
+                   repos = "https://cloud.r-project.org")
+}
+
+
+#Milestone 3----
+###Issue 6 : TRAINING THE MODEL MILESTONE ----
+#split the dataset
+set.seed(123)  # For reproducibility
+split_index <- createDataPartition(avacado_price_prediction_dataset$AveragePrice, p = 0.8, list = FALSE)
+train_data <- avacado_price_prediction_dataset[split_index, ]
+test_data <- avacado_price_prediction_dataset[-split_index, ]
+
+#bootstrapping
+set.seed(123)  # For reproducibility
+bootstrap_samples <- 1000  # Adjust the number of bootstrap samples
+bootstrap_means <- numeric(bootstrap_samples)
+
+for (i in 1:bootstrap_samples) {
+  bootstrap_sample <- sample(avacado_price_prediction_dataset$AveragePrice, replace = TRUE)
+  bootstrap_means[i] <- mean(bootstrap_sample)
+}
+
+# Print the summary statistics of the bootstrap means
+summary(bootstrap_means)
+
+
+###Cross validation ----
+set.seed(123)  # For reproducibility
+k <- 5  # Number of folds
+folds <- createFolds(avacado_price_prediction_dataset$AveragePrice, k = k, list = TRUE)
+
+# Perform k-fold cross-validation
+for (i in 1:k) {
+  # Create training and testing sets for each fold
+  train_data <- avacado_price_prediction_dataset[-folds[[i]], ]
+  test_data <- avacado_price_prediction_dataset[folds[[i]], ]
+
+}
+
+# Install and load required packages if not already installed
+if (!requireNamespace("caret", quietly = TRUE)) {
+  install.packages("caret")
+}
+
+library(caret)
+
+set.seed(123)  # For reproducibility
+k <- 5  # Number of folds
+
+# Create folds for cross-validation
+folds <- createFolds(avacado_price_prediction_dataset$AveragePrice, k = k, list = TRUE)
+
+# Specify models for comparison (you can add more)
+model_list <- c("lm", "rf", "svmRadial")
+
+# Initialize a list to store results
+model_results <- list()
+
+# Perform k-fold cross-validation for each model
+for (model_name in model_list) {
+  model <- train(
+    AveragePrice ~ Total.Volume + Total.Bags,  # Adjust predictors
+    data = avacado_price_prediction_dataset,
+    method = model_name,
+    trControl = trainControl(method = "cv", number = k)
+  )
+  
+  # Store the model results
+  model_results[[model_name]] <- model
+}
+
+# Compare model performance using resampling methods
+resamples_results <- resamples(model_results)
+
+# Summarize and print the results
+summary(resamples_results)
+
+
+#Milestone 4 ----
+### Issue 7 : HYPER-PARAMETER TUNING AND ENSEMBLES
+
+# Load necessary libraries
+library(caret)
+library(randomForest)
+
+# Assuming "AveragePrice" is your numeric target variable
+set.seed(123)  # For reproducibility
+k <- 5  # Number of folds
+
+# Specify the tuning grid (you can adjust these values)
+tuning_grid <- expand.grid(
+  sigma = c(0.1, 0.5, 1),
+  C = c(1, 5, 10)
+)
+
+# Perform hyperparameter tuning with grid search
+svm_model <- train(
+  AveragePrice ~ Total.Volume + Total.Bags,
+  data = avacado_price_prediction_dataset,
+  method = "svmRadial",
+  trControl = trainControl(method = "cv", number = k),
+  tuneGrid = tuning_grid
+)
+
+# Print the best model
+print(svm_model)
+
+# Perform bagging with the bagEarth model
+bagging_model <- train(
+  AveragePrice ~ Total.Volume + Total.Bags,
+  data = avacado_price_prediction_dataset,
+  method = "bagEarth",
+  trControl = trainControl(method = "cv", number = k)
+)
+
+# Print the bagging model
+print(bagging_model)
+
+# Load necessary libraries
+library(caret)
+library(MASS)  
+
+predictors <- c("Total.Volume", "Total.Bags")
+
+set.seed(123)  # For reproducibility
+
+# Create a formula for the model
+formula <- as.formula(paste("AveragePrice ~", paste(predictors, collapse = "+")))
+
+# Create the LDA model
+avacado_price_prediction_dateset_model_lda <- lda(formula, data = avacado_price_prediction_dataset)
+
+# Save the model
+saveRDS(avacado_price_prediction_dateset_model_lda, "./model/saved_avacado_price_prediction_dateset_model_lda.rds")
+
+# Print the model summary
+summary(avacado_price_prediction_dateset_model_lda)
+
+
+#Milestone 5 ----
+### Issue 8 : CONSOLIDATION ---
+saveRDS(avacado_price_prediction_dateset_model_lda, "./model/saved_avacado_price_prediction_dateset_model_lda.rds")
+
