@@ -35,3 +35,27 @@ Nairobi_temp_subset <- Nairobi_temp_subset[Nairobi_temp_subset$`Degree Celsius` 
 cat("\nModified Dataset (removed invalid degrees):\n")
 View(Nairobi_temp_subset)
 
+#plotting
+
+# Install and load ggplot2 package if not installed
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Plot time series of rounded temperature values
+#daily
+ggplot(Nairobi_temp_subset, aes(x = as.Date(paste(Year, Month, Day, sep = "-")), y = `Degree Celsius`)) +
+  geom_line() +
+  labs(title = "Temperature Time Series", x = "Day", y = "Degree Celsius") +
+  theme_minimal()
+
+#Monthly
+ggplot(Nairobi_temp_subset, aes(x = factor(Year), y = `Degree Celsius`)) +
+  geom_boxplot(fill = "skyblue", color = "blue") +
+  labs(title = "Temperature Distribution Across Months", x = "Month", y = "Degree Celsius") +
+  theme_minimal()
+
+#Annually
+ggplot(Nairobi_temp_subset, aes(x = factor(Month), y = `Degree Celsius`)) +
+  geom_boxplot(fill = "brown", color = "green") +
+  labs(title = "Temperature Distribution Across Months", x = "Year", y = "Degree Celsius") +
+  theme_minimal()
