@@ -10,7 +10,7 @@ install.packages("moments")
 install.packages("plotly")
 
 library(readr)
-Nairobi_temp <- read_csv("data/Nairobi_temp.csv")
+Nairobi_temp <- read_csv("D:/school work/sem 2/BI 2/Nairobi-temperature/data/Nairobi_temp.csv")
 View(Nairobi_temp)
 
 # the dataset has both degrees and Fahrenheit step one is to impute that column
