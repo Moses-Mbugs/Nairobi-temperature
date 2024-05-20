@@ -10,6 +10,9 @@ install.packages("moments")
 install.packages("plotly")
 
 library(readr)
+library(dplyr)
+library(lubridate)
+library(caret)
 Nairobi_temp <- read_csv("D:/school work/sem 2/BI 2/Nairobi-temperature/data/Nairobi_temp.csv")
 View(Nairobi_temp)
 
@@ -97,4 +100,25 @@ plot_temperature_for_years_bar <- function(dataset, years) {
 
 # Example: Plot temperature for multiple years using a grouped bar chart
 plot_temperature_for_years_bar(Nairobi_temp_subset, c(2001, 2002, 2003))
+
+
+# Remove unnecessary columns and handle invalid values
+columns_to_remove <- c("Region", "Country", "State", "City", "AvgTemperature")
+Nairobi_temp <- Nairobi_temp[, !names(Nairobi_temp) %in% columns_to_remove]
+
+# Handle invalid temperature values
+Nairobi_temp <- Nairobi_temp[Nairobi_temp$`Degree Celsius` != 72.77778, ]
+
+# Display the cleaned data
+View(Nairobi_temp)
+
+#Feature Engineering
+# Convert to date and extract relevant date parts
+Nairobi_temp$Date <- as.Date(paste(Nairobi_temp$Year, Nairobi_temp$Month, Nairobi_temp$Day, sep = "-"))
+Nairobi_temp$DayOfYear <- yday(Nairobi_temp$Date)
+Nairobi_temp <- Nairobi_temp %>% select(Date, DayOfYear, `Degree Celsius`)
+
+# Handle missing values if any
+Nairobi_temp <- na.omit(Nairobi_temp)
+
 
